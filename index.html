@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Korean Vocabulary Quiz</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #ffffff;
+    --bg2: #f5f4f0;
+    --bg3: #eeede8;
+    --text: #1a1a18;
+    --text2: #6b6a66;
+    --border: rgba(0,0,0,0.12);
+    --border2: rgba(0,0,0,0.22);
+    --correct-bg: #E1F5EE;
+    --correct-border: #1D9E75;
+    --correct-text: #0F6E56;
+    --wrong-bg: #FAECE7;
+    --wrong-border: #D85A30;
+    --wrong-text: #993C1D;
+    --accent: #5DCAA5;
+    --radius: 10px;
+    --radius-lg: 14px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1e1e1c;
+      --bg2: #2a2a28;
+      --bg3: #333330;
+      --text: #f0ede6;
+      --text2: #9e9c97;
+      --border: rgba(255,255,255,0.12);
+      --border2: rgba(255,255,255,0.22);
+      --correct-bg: #04342C;
+      --correct-border: #5DCAA5;
+      --correct-text: #9FE1CB;
+      --wrong-bg: #4A1B0C;
+      --wrong-border: #F0997B;
+      --wrong-text: #F5C4B3;
+    }
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg3);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 2rem 1rem;
+  }
+
+  .app {
+    width: 100%;
+    max-width: 580px;
+  }
+
+  .header {
+    text-align: center;
+    margin-bottom: 1.75rem;
+  }
+
+  .header h1 {
+    font-size: 26px;
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: -0.3px;
+  }
+
+  .header p {
+    font-size: 14px;
+    color: var(--text2);
+    margin-top: 6px;
+  }
+
+  .mode-btns {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+  }
+
+  .mode-btn {
+    padding: 9px 22px;
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    background: transparent;
+    color: var(--text2);
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: inherit;
+  }
+
+  .mode-btn.active {
+    background: var(--bg);
+    color: var(--text);
+    border-color: var(--border2);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  }
+
+  .mode-btn:hover { background: var(--bg2); color: var(--text); }
+
+  .progress-bar {
+    height: 5px;
+    background: var(--bg3);
+    border-radius: 3px;
+    margin-bottom: 1.25rem;
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 3px;
+    transition: width 0.35s ease;
+  }
+
+  .q-counter {
+    font-size: 13px;
+    color: var(--text2);
+    text-align: center;
+    margin-bottom: 0.75rem;
+  }
+
+  .card {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 2rem;
+    text-align: center;
+    margin-bottom: 1.25rem;
+  }
+
+  .question-label {
+    font-size: 11px;
+    color: var(--text2);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 0.75rem;
+  }
+
+  .question-main {
+    font-size: 30px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 0.5rem;
+    line-height: 1.3;
+  }
+
+  .question-sub {
+    font-size: 14px;
+    color: var(--text2);
+    font-style: italic;
+  }
+
+  .answer-label {
+    font-size: 12px;
+    color: var(--text2);
+    text-align: center;
+    margin-bottom: 0.65rem;
+  }
+
+  .options {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 1.25rem;
+  }
+
+  .opt {
+    padding: 14px 10px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--bg);
+    color: var(--text);
+    font-size: 14px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.15s;
+    line-height: 1.4;
+    font-family: inherit;
+    word-break: keep-all;
+  }
+
+  .opt:hover:not(:disabled) { border-color: var(--border2); background: var(--bg2); }
+  .opt:disabled { cursor: default; }
+
+  .opt.correct {
+    border-color: var(--correct-border) !important;
+    background: var(--correct-bg) !important;
+    color: var(--correct-text) !important;
+    font-weight: 500;
+  }
+
+  .opt.wrong {
+    border-color: var(--wrong-border) !important;
+    background: var(--wrong-bg) !important;
+    color: var(--wrong-text) !important;
+  }
+
+  .opt.reveal {
+    border-color: var(--correct-border) !important;
+    background: var(--correct-bg) !important;
+    color: var(--correct-text) !important;
+  }
+
+  .stats {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    margin-bottom: 1rem;
+  }
+
+  .stat {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 0.5rem 1.25rem;
+    text-align: center;
+    flex: 1;
+    max-width: 120px;
+  }
+
+  .stat-val {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .stat-label {
+    font-size: 11px;
+    color: var(--text2);
+    margin-top: 2px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .next-btn {
+    width: 100%;
+    padding: 13px;
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    background: transparent;
+    color: var(--text);
+    font-size: 15px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s;
+    display: none;
+  }
+
+  .next-btn:hover { background: var(--bg2); }
+
+  .result-card {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 2.5rem 2rem;
+    text-align: center;
+  }
+
+  .result-score {
+    font-size: 60px;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1;
+    margin-bottom: 0.5rem;
+  }
+
+  .result-pct {
+    font-size: 18px;
+    color: var(--text2);
+    margin-bottom: 0.5rem;
+  }
+
+  .result-msg {
+    font-size: 16px;
+    color: var(--text2);
+    margin-bottom: 1.75rem;
+  }
+
+  .result-breakdown {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    margin-bottom: 1.75rem;
+  }
+
+  .breakdown-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
+    color: var(--text2);
+  }
+
+  .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+  }
+
+  .dot-correct { background: var(--correct-border); }
+  .dot-wrong { background: var(--wrong-border); }
+
+  .restart-btn {
+    padding: 13px 40px;
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    background: transparent;
+    color: var(--text);
+    font-size: 15px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s;
+    margin: 0 6px;
+  }
+
+  .restart-btn:hover { background: var(--bg2); }
+
+  .emoji-flag { font-size: 36px; margin-bottom: 1rem; display: block; }
+
+  @media (max-width: 400px) {
+    .options { grid-template-columns: 1fr; }
+    .question-main { font-size: 24px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <h1>🇰🇷 Korean Vocabulary Quiz</h1>
+    <p>Test your knowledge of everyday Korean phrases</p>
+  </div>
+
+  <div class="mode-btns">
+    <button class="mode-btn active" id="btn-kr" onclick="setMode('kr')">Korean → English</button>
+    <button class="mode-btn" id="btn-en" onclick="setMode('en')">English → Korean</button>
+  </div>
+
+  <div id="quiz-area"></div>
+</div>
+
+<script>
+const vocab = [
+  {kr:"점심",rom:"jeom-sim",en:"Lunch"},
+  {kr:"점심 먹었어요?",rom:"jeom-sim meog-eoss-eo-yo?",en:"Have you eaten lunch?"},
+  {kr:"점심으로 뭐 먹었어요?",rom:"jeom-sim-eu-ro mwo meog-eoss-eo-yo?",en:"What did you eat for lunch?"},
+  {kr:"계란과 밥을 요리했어요",rom:"gyerangwa babeul yorihaesseoyo",en:"I cooked eggs and rice"},
+  {kr:"형제자매가 몇 명이에요?",rom:"hyeong-je-ja-mae-ga myeot myeong-i-e-yo?",en:"How many siblings do you have?"},
+  {kr:"저는 둘째예요",rom:"jeoneun dul-jjae-ye-yo",en:"I'm the younger of two"},
+  {kr:"저는 외동이에요",rom:"jeoneun oe-dong-i-e-yo",en:"I'm an only child"},
+  {kr:"뭐 마시겠어요?",rom:"mwo ma-si-geoss-eo-yo?",en:"What would you like to drink?"},
+  {kr:"따뜻한 아메리카노 한 잔 주세요",rom:"tta-tteut-han a-me-ri-ka-no han jan ju-se-yo",en:"One hot Americano please"},
+  {kr:"잘 마실게요",rom:"jal ma-sil-ge-yo",en:"Thank you for the treat"},
+  {kr:"날씨가 흐려요",rom:"nal-ssi-ga heu-ryeo-yo",en:"The weather is cloudy"},
+  {kr:"비가 와요",rom:"bi-ga wa-yo",en:"It's raining"},
+  {kr:"몇 년생이에요?",rom:"myeot nyeon-saeng-i-e-yo?",en:"When were you born?"},
+  {kr:"2001년생이에요",rom:"i-cheon-il-nyeon-saeng-i-e-yo",en:"I was born in 2001"},
+  {kr:"저도 2001년생이에요",rom:"jeodo i-cheon-il-nyeon-saeng-i-e-yo",en:"I was also born in 2001"},
+  {kr:"1999년생이에요",rom:"cheon-gu-baek-gu-sip-gu-nyeon-saeng-i-e-yo",en:"I was born in 1999"},
+  {kr:"오빠",rom:"oppa",en:"Older brother (female speaker)"},
+  {kr:"형",rom:"hyeong",en:"Older brother (male speaker)"},
+  {kr:"제 수업은 E11에 있어요",rom:"je su-eob-eun E-sib-il-e iss-eo-yo",en:"My class is in E11"},
+  {kr:"제 연구실은 N5에 있어요",rom:"je yeon-gu-sil-eun N-o-e iss-eo-yo",en:"My lab is in N5"},
+  {kr:"제 연구실은 E2에 있어요",rom:"je yeon-gu-sil-eun E-i-e iss-eo-yo",en:"My lab is in E2"},
+  {kr:"다음에 봐요",rom:"da-um-e bwa-yo",en:"See you next time"},
+];
+
+const TOTAL = 10;
+let mode = 'kr';
+let questions = [];
+let current = 0;
+let score = 0;
+let answered = false;
+let history = [];
+
+function shuffle(arr) { return [...arr].sort(() => Math.random() - 0.5); }
+
+function setMode(m) {
+  mode = m;
+  document.getElementById('btn-kr').classList.toggle('active', m === 'kr');
+  document.getElementById('btn-en').classList.toggle('active', m === 'en');
+  buildQuestions();
+}
+
+function buildQuestions() {
+  questions = shuffle(vocab).slice(0, TOTAL);
+  current = 0;
+  score = 0;
+  answered = false;
+  history = [];
+  render();
+}
+
+function getWrongOptions(correct, field) {
+  return shuffle(vocab.filter(v => v[field] !== correct[field])).slice(0, 3).map(v => v[field]);
+}
+
+function render() {
+  const area = document.getElementById('quiz-area');
+  if (current >= TOTAL) {
+    renderResult(area);
+    return;
+  }
+
+  const q = questions[current];
+  const pField = mode === 'kr' ? 'kr' : 'en';
+  const aField = mode === 'kr' ? 'en' : 'kr';
+  const pLabel = mode === 'kr' ? 'Korean' : 'English';
+  const aHint = mode === 'kr' ? 'Choose the English meaning' : 'Choose the Korean translation';
+  const correct = q[aField];
+  const options = shuffle([correct, ...getWrongOptions(q, aField)]);
+  const pct = Math.round((current / TOTAL) * 100);
+
+  const optsBtns = options.map(o => {
+    const safe = o.replace(/&/g,'&amp;').replace(/'/g,'&#39;').replace(/"/g,'&quot;');
+    const corrSafe = correct.replace(/&/g,'&amp;').replace(/'/g,'&#39;').replace(/"/g,'&quot;');
+    return `<button class="opt" onclick="choose(this,'${safe}','${corrSafe}')">${o}</button>`;
+  }).join('');
+
+  area.innerHTML = `
+    <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+    <div class="q-counter">Question ${current + 1} of ${TOTAL}</div>
+    <div class="card">
+      <div class="question-label">${pLabel}</div>
+      <div class="question-main">${q[pField]}</div>
+      ${mode === 'kr' ? `<div class="question-sub">${q.rom}</div>` : ''}
+    </div>
+    <div class="answer-label">${aHint}</div>
+    <div class="options" id="opts">${optsBtns}</div>
+    <div class="stats">
+      <div class="stat"><div class="stat-val">${score}</div><div class="stat-label">Correct</div></div>
+      <div class="stat"><div class="stat-val">${current - score}</div><div class="stat-label">Wrong</div></div>
+      <div class="stat"><div class="stat-val">${TOTAL - current}</div><div class="stat-label">Left</div></div>
+    </div>
+    <button class="next-btn" id="next-btn" onclick="nextQ()">${current + 1 < TOTAL ? 'Next →' : 'See results →'}</button>
+  `;
+}
+
+function choose(btn, chosen, correct) {
+  if (answered) return;
+  answered = true;
+  const isCorrect = chosen === correct;
+  if (isCorrect) score++;
+  history.push({ q: questions[current], chosen, correct, isCorrect });
+
+  document.querySelectorAll('.opt').forEach(b => {
+    b.disabled = true;
+    const txt = b.textContent.trim();
+    const cmp = correct.replace(/&amp;/g,'&').replace(/&#39;/g,"'").replace(/&quot;/g,'"');
+    if (txt === cmp) b.classList.add('reveal');
+  });
+
+  if (!isCorrect) btn.classList.add('wrong');
+  else btn.classList.add('correct');
+
+  document.getElementById('next-btn').style.display = 'block';
+}
+
+function nextQ() {
+  current++;
+  answered = false;
+  render();
+}
+
+function renderResult(area) {
+  const pct = Math.round((score / TOTAL) * 100);
+  const msg = pct === 100 ? '🎉 Perfect score! 완벽해요!' :
+              pct >= 80 ? '🌟 Great job! 잘했어요!' :
+              pct >= 60 ? '👍 Good effort! 계속 연습해요!' :
+              '📚 Keep studying! 화이팅!';
+
+  const rows = history.map(h => {
+    const icon = h.isCorrect ? '✓' : '✗';
+    const color = h.isCorrect ? 'var(--correct-text)' : 'var(--wrong-text)';
+    const q = mode === 'kr' ? h.q.kr : h.q.en;
+    const ans = mode === 'kr' ? h.q.en : h.q.kr;
+    return `<tr>
+      <td style="padding:6px 8px;font-weight:600;color:${color};width:24px">${icon}</td>
+      <td style="padding:6px 8px;font-size:13px;color:var(--text)">${q}</td>
+      <td style="padding:6px 8px;font-size:13px;color:var(--text2)">${ans}</td>
+    </tr>`;
+  }).join('');
+
+  area.innerHTML = `
+    <div class="result-card">
+      <span class="emoji-flag">🇰🇷</span>
+      <div class="result-score">${score}/${TOTAL}</div>
+      <div class="result-pct">${pct}%</div>
+      <div class="result-msg">${msg}</div>
+      <div class="result-breakdown">
+        <div class="breakdown-item"><span class="dot dot-correct"></span>${score} correct</div>
+        <div class="breakdown-item"><span class="dot dot-wrong"></span>${TOTAL - score} wrong</div>
+      </div>
+      <table style="width:100%;border-collapse:collapse;margin-bottom:1.5rem;text-align:left">
+        <thead>
+          <tr>
+            <th style="padding:6px 8px;font-size:11px;color:var(--text2);font-weight:500;text-transform:uppercase;letter-spacing:.06em"></th>
+            <th style="padding:6px 8px;font-size:11px;color:var(--text2);font-weight:500;text-transform:uppercase;letter-spacing:.06em">Prompt</th>
+            <th style="padding:6px 8px;font-size:11px;color:var(--text2);font-weight:500;text-transform:uppercase;letter-spacing:.06em">Answer</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+      <button class="restart-btn" onclick="buildQuestions()">Try again</button>
+      <button class="restart-btn" onclick="setMode(mode==='kr'?'en':'kr')">
+        Switch to ${mode==='kr'?'English → Korean':'Korean → English'}
+      </button>
+    </div>
+  `;
+}
+
+buildQuestions();
+</script>
+</body>
+</html>
