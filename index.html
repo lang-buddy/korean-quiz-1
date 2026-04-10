@@ -404,6 +404,9 @@ function getWrongOptions(correct, field) {
   return shuffle(vocab.filter(v => v[field] !== correct[field])).slice(0, 3).map(v => v[field]);
 }
 
+let currentOptions = [];
+let correctAnswer = '';
+
 function render() {
   const area = document.getElementById('quiz-area');
   if (current >= TOTAL) {
@@ -416,15 +419,13 @@ function render() {
   const aField = mode === 'kr' ? 'en' : 'kr';
   const pLabel = mode === 'kr' ? 'Korean' : 'English';
   const aHint = mode === 'kr' ? 'Choose the English meaning' : 'Choose the Korean translation';
-  const correct = q[aField];
-  const options = shuffle([correct, ...getWrongOptions(q, aField)]);
+  correctAnswer = q[aField];
+  currentOptions = shuffle([correctAnswer, ...getWrongOptions(q, aField)]);
   const pct = Math.round((current / TOTAL) * 100);
 
-  const optsBtns = options.map(o => {
-    const safe = o.replace(/&/g,'&amp;').replace(/'/g,'&#39;').replace(/"/g,'&quot;');
-    const corrSafe = correct.replace(/&/g,'&amp;').replace(/'/g,'&#39;').replace(/"/g,'&quot;');
-    return `<button class="opt" onclick="choose(this,'${safe}','${corrSafe}')">${o}</button>`;
-  }).join('');
+  const optsBtns = currentOptions.map((o, i) =>
+    `<button class="opt" data-index="${i}" onclick="choose(this)">${o}</button>`
+  ).join('');
 
   area.innerHTML = `
     <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
@@ -445,18 +446,18 @@ function render() {
   `;
 }
 
-function choose(btn, chosen, correct) {
+function choose(btn) {
   if (answered) return;
   answered = true;
-  const isCorrect = chosen === correct;
+  const chosen = currentOptions[parseInt(btn.dataset.index)];
+  const isCorrect = chosen === correctAnswer;
   if (isCorrect) score++;
-  history.push({ q: questions[current], chosen, correct, isCorrect });
+  history.push({ q: questions[current], chosen, correct: correctAnswer, isCorrect });
 
   document.querySelectorAll('.opt').forEach(b => {
     b.disabled = true;
-    const txt = b.textContent.trim();
-    const cmp = correct.replace(/&amp;/g,'&').replace(/&#39;/g,"'").replace(/&quot;/g,'"');
-    if (txt === cmp) b.classList.add('reveal');
+    const idx = parseInt(b.dataset.index);
+    if (currentOptions[idx] === correctAnswer) b.classList.add('reveal');
   });
 
   if (!isCorrect) btn.classList.add('wrong');
